@@ -204,6 +204,76 @@ class PolygonExtractor:
         logits = self.model(image_t.unsqueeze(0).to(self.device))
         mask = logits.argmax(dim=1).squeeze(0).to("cpu", torch.uint8).numpy()
         return mask, rect
+    
+    @torch.no_grad()
+    def predict_mask_from_image(
+        self, image: Image.Image
+    ) -> tuple[np.ndarray, tuple[int, int, int, int]]:
+        """Run inference directly on a raster floor-plan image."""
+        image = image.convert("RGB")
+        H, W = self.image_size
+
+        original_w, original_h = image.size
+
+        if self.letterbox:
+            scale = min(W / original_w, H / original_h)
+            inner_w = max(1, int(round(original_w * scale)))
+            inner_h = max(1, int(round(original_h * scale)))
+        else:
+            inner_w, inner_h = W, H
+
+        image = image.resize((inner_w, inner_h), Image.Resampling.LANCZOS)
+        image_t = torch.from_numpy(
+            np.array(image)
+        ).permute(2, 0, 1).contiguous().float().div_(255.0)
+
+        if self.normalize:
+            mean = torch.tensor(IMAGENET_MEAN).view(3, 1, 1)
+            std = torch.tensor(IMAGENET_STD).view(3, 1, 1)
+            image_t = (image_t - mean) / std
+
+        if self.letterbox and (inner_h, inner_w) != (H, W):
+            top = (H - inner_h) // 2
+            left = (W - inner_w) // 2
+
+            if self.normalize:
+                canvas = torch.zeros(3, H, W)
+            else:
+                canvas = (
+                    torch.tensor(IMAGENET_MEAN)
+                    .view(3, 1, 1)
+                    .expand(3, H, W)
+                    .clone()
+                )
+
+            canvas[:, top:top + inner_h, left:left + inner_w] = image_t
+            rect = (left, top, inner_w, inner_h)
+            image_t = canvas
+        else:
+            rect = (0, 0, W, H)
+
+        logits = self.model(image_t.unsqueeze(0).to(self.device))
+        mask = logits.argmax(dim=1).squeeze(0).to("cpu", torch.uint8).numpy()
+        return mask, rect
+
+    def extract_image(self, image: Image.Image) -> ExtractionResult:
+        """Extract wall, door, and window polygons from a raster image."""
+        mask, (left, top, inner_w, inner_h) = self.predict_mask_from_image(image)
+
+        H, W = mask.shape
+        if (inner_h, inner_w) != mask.shape:
+            cleaned = np.full_like(mask, FLOOR_ID)
+            cleaned[top:top + inner_h, left:left + inner_w] = (
+                mask[top:top + inner_h, left:left + inner_w]
+            )
+            mask = cleaned
+
+        return {
+            "canvas_size": [W, H],
+            "content_rect": [left, top, inner_w, inner_h],
+            "polygons": mask_to_polygons(mask),
+        }
+
 
     def extract(self, svg_path: Path) -> ExtractionResult:
         mask, (left, top, inner_w, inner_h) = self.predict_mask(svg_path)

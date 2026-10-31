@@ -1,658 +1,3331 @@
 <!doctype html>
+
+
+
 <html lang="en">
+
+
+
 <head>
+
+
+
 <meta charset="utf-8">
+
+
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Floorplan to 3D</title>
+
+
+
+<title>Archscale — Floorplan to 3D</title>
+
+
+
 <style>
+
+
+
   :root {
+
+
+
     --bg: #f4f1ec;
+
+
+
     --floor: #ece8e1;
+
+
+
     --ink: #1a1a1a;
+
+
+
     --muted: rgba(26, 26, 26, 0.55);
+
+
+
     --hairline: rgba(0, 0, 0, 0.08);
+
+
+
   }
+
+
+
   * { box-sizing: border-box; }
+
+
+
   html, body { height: 100%; }
+
+
+
   body {
+
+
+
     margin: 0;
+
+
+
     overflow: hidden;
+
+
+
     background: var(--bg);
+
+
+
     color: var(--ink);
+
+
+
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+
+
+
     -webkit-font-smoothing: antialiased;
+
+
+
   }
+
+
+
   canvas#scene { display: block; position: fixed; inset: 0; }
 
+
+
   /* Floating control panel — frosted, light, sits above the canvas. */
+
+
+
   #ui {
+
+
+
     position: fixed; top: 24px; left: 24px; z-index: 10;
+
+
+
     width: 280px;
+
+
+
     background: rgba(255, 255, 255, 0.78);
+
+
+
     backdrop-filter: blur(20px) saturate(150%);
+
+
+
     -webkit-backdrop-filter: blur(20px) saturate(150%);
+
+
+
     border: 1px solid var(--hairline);
+
+
+
     border-radius: 14px;
+
+
+
     padding: 18px 20px;
+
+
+
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 28px rgba(0,0,0,0.06);
+
+
+
   }
+
+
+
   h1 {
+
+
+
     margin: 0 0 14px;
+
+
+
     font-size: 13px; font-weight: 600;
+
+
+
     letter-spacing: -0.01em;
+
+
+
   }
+
+
+
   .label {
+
+
+
     font-size: 10px; font-weight: 600;
+
+
+
     color: var(--muted);
+
+
+
     margin: 14px 0 6px;
+
+
+
     text-transform: uppercase;
+
+
+
     letter-spacing: 0.06em;
+
+
+
   }
+
+
+
   .label:first-of-type { margin-top: 0; }
+
+
+
   .row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+
+
   .btn {
+
+
+
     font: inherit; font-size: 12px;
+
+
+
     padding: 7px 11px;
+
+
+
     background: #fff;
+
+
+
     border: 1px solid var(--hairline);
+
+
+
     border-radius: 8px;
+
+
+
     cursor: pointer;
+
+
+
     color: var(--ink);
+
+
+
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+
+
+
   }
+
+
+
   .btn:hover { background: #fafaf7; border-color: rgba(0, 0, 0, 0.16); }
+
+
+
   .btn:active { transform: translateY(1px); }
+
+
+
   .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+
+
   .btn.primary:hover { background: #000; }
+
+
+
   .btn:disabled { opacity: 0.4; cursor: default; }
 
+
+
   #status {
+
+
+
     font-size: 11px;
+
+
+
     color: var(--muted);
+
+
+
     margin-top: 14px;
+
+
+
     min-height: 14px;
+
+
+
     font-variant-numeric: tabular-nums;
+
+
+
   }
+
+
 
   /* Drop overlay — appears when dragging a file onto the page. */
+
+
+
   body.dragging::after {
-    content: "drop SVG to render";
+
+
+
+    content: "Drop your floor plan to build in 3D";
+
+
+
     position: fixed; inset: 16px;
+
+
+
     display: flex; align-items: center; justify-content: center;
+
+
+
     background: rgba(244, 241, 236, 0.92);
+
+
+
     backdrop-filter: blur(12px);
+
+
+
     border: 2px dashed rgba(0, 0, 0, 0.18);
+
+
+
     border-radius: 18px;
+
+
+
     font-size: 22px; font-weight: 500;
+
+
+
     color: var(--ink);
+
+
+
     z-index: 100;
+
+
+
     pointer-events: none;
+
+
+
   }
+
+
+
+  /* Archscale workspace refresh */
+
+
+
+  :root {
+
+
+
+    --bg: #101218;
+
+
+
+    --floor: #e9e7e1;
+
+
+
+    --ink: #f4f5f8;
+
+
+
+    --muted: #a4a8b5;
+
+
+
+    --hairline: rgba(255,255,255,.10);
+
+
+
+    --panel: rgba(24,27,36,.88);
+
+
+
+    --accent: #b9c6ff;
+
+
+
+  }
+
+
+
+  body { background: var(--bg); color: var(--ink); }
+
+
+
+  #ui {
+
+
+
+    top: 18px; left: 18px; width: min(340px, calc(100vw - 36px));
+
+
+
+    padding: 20px; border-radius: 18px; color: var(--ink);
+
+
+
+    background: var(--panel); border: 1px solid rgba(255,255,255,.11);
+
+
+
+    box-shadow: 0 18px 55px rgba(0,0,0,.25);
+
+
+
+  }
+
+
+
+  #ui h1 { display:flex; align-items:center; gap:10px; font-size:16px; letter-spacing:-.03em; margin-bottom:6px; }
+
+
+
+  #ui h1::before { content:"A"; display:grid; place-items:center; width:30px; height:30px; border-radius:9px; background:var(--accent); color:#141722; font-weight:800; }
+
+
+
+  .subtitle { color:var(--muted); font-size:11px; line-height:1.5; margin-bottom:17px; }
+
+
+
+  .label { color:#aeb3c2; font-size:10px; margin:17px 0 8px; }
+
+
+
+  .btn {
+
+
+
+    background:rgba(255,255,255,.055); color:#f4f5f8; border:1px solid rgba(255,255,255,.12);
+
+
+
+    border-radius:10px; padding:9px 12px; font-size:11px; transition: background .18s,border-color .18s,transform .12s;
+
+
+
+  }
+
+
+
+  .btn:hover { background:rgba(255,255,255,.11); border-color:rgba(255,255,255,.24); }
+
+
+
+  .btn.primary { background:var(--accent); color:#171a25; border-color:var(--accent); font-weight:700; }
+
+
+
+  .btn.primary:hover { background:#d0d8ff; }
+
+
+
+  .row { gap:7px; }
+
+
+
+  #toggle-view, #upload-btn { width:100%; text-align:center; }
+
+
+
+  #upload-btn { margin-top:8px; }
+
+
+
+  #status { color:#c4c9d6; border-top:1px solid var(--hairline); padding-top:12px; margin-top:16px; line-height:1.5; }
+
+
+
+  .control-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:8px; }
+
+
+
+  .control-grid .btn { width:100%; }
+
+
+
+  body.dragging::after { content:"Drop your floor plan to build in 3D"; background:rgba(16,18,24,.94); color:#f4f5f8; border-color:var(--accent); }
+
+
+
+  @media (max-width: 600px) {
+
+
+
+    #ui { top:10px; left:10px; width:calc(100vw - 20px); padding:14px; }
+
+
+
+    #ui .subtitle { margin-bottom:10px; }
+
+
+
+    #ui .label { margin-top:11px; }
+
+
+
+    #ui .row .btn { flex:1; }
+
+
+
+  }
+
+
+
+  #furniture-panel { position:fixed; top:18px; right:18px; z-index:21; width:min(470px,calc(100vw - 36px)); max-height:calc(100vh - 36px); overflow:auto; padding:18px; border-radius:18px; color:#f4f5f8; background:rgba(24,27,36,.97); border:1px solid rgba(255,255,255,.13); box-shadow:0 18px 55px rgba(0,0,0,.38); }
+
+
+
+  #furniture-panel[hidden] { display:none; }
+
+
+
+  .furniture-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+
+
+
+  .furniture-rooms { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:14px 0; }
+
+
+
+  .furniture-room { text-align:left; padding:9px; border-radius:10px; color:#e9ebf2; background:#202431; border:1px solid rgba(255,255,255,.1); cursor:pointer; }
+
+
+
+  .furniture-room.active { border-color:#b9c6ff; background:rgba(185,198,255,.14); }
+
+
+
+  .furniture-room strong,.furniture-room small { display:block; }
+
+
+
+  .furniture-room small { color:#aeb5c5; font-size:10px; margin-top:3px; }
+
+
+
+  .furniture-search { display:flex; gap:7px; margin:12px 0; }
+
+
+
+  .furniture-search input { flex:1; min-width:0; padding:10px; border-radius:9px; color:#f4f5f8; background:#171a23; border:1px solid rgba(255,255,255,.16); }
+
+
+
+  #furniture-results { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+
+
+
+  .furniture-card { min-width:0; padding:6px; border-radius:10px; color:#f4f5f8; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); cursor:pointer; text-align:left; font:inherit; }
+
+
+
+  .furniture-card.selected { border-color:#b9c6ff; background:rgba(185,198,255,.14); }
+
+
+
+  .furniture-card img { width:100%; aspect-ratio:1; object-fit:cover; display:block; border-radius:6px; background:#292d38; margin-bottom:6px; }
+
+
+
+  .furniture-card strong,.furniture-card small { display:block; overflow-wrap:anywhere; }
+
+
+
+  .furniture-card strong { font-size:11px; }
+
+
+
+  .furniture-card small { color:#aeb5c5; font-size:9px; margin-top:4px; }
+
+
+
+  .furniture-footer { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:13px; }
+
+
+
+  #furniture-status { color:#c4c9d6; font-size:11px; line-height:1.5; margin-top:11px; }
+
+
+
+  #furniture-panel .btn { color:#f4f5f8; }
+
+
+
+  #furniture-panel .btn.primary { color:#171a25; }
+
+
+
+  @media(max-width:600px) { #furniture-panel { top:auto; bottom:10px; right:10px; width:calc(100vw - 20px); max-height:72vh; } }
+
+
+
+  #materials-panel {
+
+
+
+    position: fixed; top: 18px; right: 18px; z-index: 20;
+
+
+
+    width: min(420px, calc(100vw - 36px)); max-height: calc(100vh - 36px);
+
+
+
+    overflow: auto; padding: 18px; border-radius: 18px;
+
+
+
+    color: #f4f5f8; background: rgba(24,27,36,.96);
+
+
+
+    border: 1px solid rgba(255,255,255,.13);
+
+
+
+    box-shadow: 0 18px 55px rgba(0,0,0,.35);
+
+
+
+  }
+
+
+
+  #materials-panel[hidden] { display: none; }
+
+
+
+  .materials-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+
+
+
+  .materials-search { display:flex; gap:7px; margin:14px 0; }
+
+
+
+  .materials-search input, #material-resolution {
+
+
+
+    min-width:0; padding:9px 10px; border-radius:9px;
+
+
+
+    color:#f4f5f8; background:#171a23; border:1px solid rgba(255,255,255,.16);
+
+
+
+  }
+
+
+
+  .materials-search input { flex:1; }
+
+
+
+  #material-results { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+
+
+
+  .material-card { min-width:0; padding:6px; border-radius:10px; color:#f4f5f8;
+
+
+
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+
+
+
+    cursor:pointer; text-align:left; font:inherit; font-size:11px; }
+
+
+
+  .material-card.selected { border-color:#b9c6ff; background:rgba(185,198,255,.13); }
+
+
+
+  .material-card img { display:block; width:100%; aspect-ratio:1; object-fit:cover; border-radius:6px; margin-bottom:6px; background:#292d38; }
+
+
+
+  .material-card span { display:block; overflow-wrap:anywhere; }
+
+
+
+  .material-actions { display:flex; gap:8px; align-items:center; margin-top:14px; }
+
+
+
+  #material-status { color:#c4c9d6; font-size:11px; line-height:1.5; margin-top:12px; }
+
+
+
+  #materials-panel .btn { color:#f4f5f8; }
+
+
+
+  #materials-panel .btn.primary { color:#171a25; }
+
+
+
+  @media (max-width:600px) {
+
+
+
+    #materials-panel { top:auto; bottom:10px; right:10px; width:calc(100vw - 20px); max-height:65vh; }
+
+
+
+  }
+
+
+
+
+  /* Compact construction estimator: dock it to the right, never cover most of the viewer. */
+  #billing-panel {
+    position: fixed;
+    z-index: 1000;
+    top: 16px;
+    right: -240px; /* offset for the viewer's transformed container */
+    left: auto;
+    bottom: 16px;
+    transform: none;
+    width: min(380px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 14px;
+    border-radius: 14px;
+    color: #f4f5f8;
+    background: rgba(24,27,36,.99);
+    border: 1px solid rgba(255,255,255,.16);
+    box-shadow: 0 18px 55px rgba(0,0,0,.48);
+  }
+  #billing-panel[hidden] { display: none; }
+  .billing-head { display:flex; justify-content:space-between; align-items:center; gap:12px; position:sticky; top:-20px; z-index:2; padding:8px 0 12px; background:rgba(24,27,36,.99); }
+  .billing-head strong { font-size:16px; }
+  .billing-note { color:#c2c8d5; font-size:12px; line-height:1.5; }
+  .billing-label { display:block; margin:12px 0 6px; color:#d1d5df; font-size:12px; }
+  #billing-panel input, #billing-panel textarea { display:block; width:100%; min-width:0; box-sizing:border-box; padding:10px; border-radius:9px; color:#f4f5f8; background:#171a23; border:1px solid rgba(255,255,255,.2); font:inherit; font-size:13px; }
+  #billing-panel textarea { resize:vertical; min-height:130px; max-height:190px; font-family:ui-monospace,monospace; line-height:1.4; }
+  .billing-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:14px 0; }
+  .billing-grid label { display:block; min-width:0; color:#d1d5df; font-size:11px; }
+  .billing-grid input { margin-top:6px; }
+  #billing-calculate { display:block; width:100%; margin-top:10px; }
+  #billing-status { color:#d1d5df; font-size:12px; line-height:1.5; margin-top:12px; }
+  #billing-result { white-space:pre-wrap; overflow-wrap:anywhere; max-height:280px; overflow:auto; padding:12px; border-radius:10px; background:#11141c; color:#e8ebf5; font-size:11px; }
+  @media(max-width:600px) {
+    #billing-panel { top:8px; right:8px; bottom:8px; left:auto; width:min(360px, calc(100vw - 16px)); max-width:calc(100vw - 16px); padding:12px; }
+    .billing-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    .billing-head { top:-14px; }
+  }
+  @media(max-width:360px) { .billing-grid { grid-template-columns:minmax(0,1fr); } }
+
 </style>
 
+
+
 <script type="importmap">
+
+
+
 {
+
+
+
   "imports": {
+
+
+
     "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+
+
+
     "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+
+
+
   }
+
+
+
 }
+
+
+
 </script>
+
+
+
 </head>
+
+
+
 <body>
 
-<div id="ui">
-  <h1>Floorplan → 3D</h1>
 
-  <div class="label">Try a sample</div>
+
+<div id="ui">
+
+
+
+  <h1>ARCHSCALE</h1>
+
+
+
+  <div class="subtitle">Turn a technical floor plan into an explorable 3D space.</div>
+
+
+
+  <div class="label">Start with a sample</div>
+
+
+
   <div class="row">
+
+
+
     <button class="btn" data-sample="1191">Architectural</button>
+
+
+
     <button class="btn" data-sample="4068">Compact</button>
+
+
+
     <button class="btn" data-sample="3676">Long house</button>
+
+
+
   </div>
 
-  <div class="label">View</div>
-  <button class="btn" id="toggle-view">Show original</button>
 
-  <div class="label" id="upload-label" hidden>Or upload</div>
-  <button class="btn primary" id="upload-btn" hidden>Choose SVG file…</button>
-  <input type="file" id="file-input" accept=".svg" hidden>
 
-  <div id="status">Ready.</div>
+  <div class="label" id="upload-label" hidden>Build from your drawing</div>
+
+
+
+  <button class="btn primary" id="upload-btn" hidden>＋ Upload floor plan</button>
+
+
+
+  <input type="file" id="file-input" accept=".svg,.pdf,.png,.jpg,.jpeg,.webp" hidden>
+
+
+
+  <button class="btn" id="tectly-upload-btn" hidden>＋ Upload with Tectly</button>
+
+
+
+  <input type="file" id="tectly-file-input" accept=".pdf,.png,.jpg,.jpeg,.webp" hidden>
+
+
+
+  <div class="label">Explore model</div>
+
+
+
+  <button class="btn" id="toggle-view">Show original plan</button>
+
+
+
+  <div class="control-grid">
+
+
+
+    <button class="btn" id="replay-animation">↻ Replay build</button>
+
+
+
+    <button class="btn" id="reset-camera">Reset view</button>
+
+
+
+  </div>
+
+
+
+  <button class="btn" id="materials-open" type="button">Wall materials</button>
+
+
+
+  <button class="btn" id="furniture-open" type="button">Furniture library</button>
+
+  <button class="btn" id="billing-open" type="button">Construction estimate</button>
+
+
+
+  <aside id="billing-panel" hidden aria-label="Construction cost estimator">
+    <div class="billing-head">
+      <strong>Construction Cost Estimate</strong>
+      <button class="btn" id="billing-close" type="button">Close</button>
+    </div>
+    <p class="billing-note">Enter measured wall dimensions in metres. These are editable sample measurements, not automatically extracted from the current 3D model yet.</p>
+    <label class="billing-label" for="billing-project">Project name</label>
+    <input id="billing-project" value="ArchScale Project" />
+    <label class="billing-label" for="billing-walls">Wall measurements (JSON)</label>
+    <textarea id="billing-walls" rows="12">[
+  {"wall_id":"W001","length":5.2,"height":3,"thickness":0.15,"faces_to_finish":2,"openings":[{"type":"door","width":0.9,"height":2.1,"count":1},{"type":"window","width":1.2,"height":1.2,"count":1}]},
+  {"wall_id":"W002","length":4.5,"height":3,"thickness":0.15,"faces_to_finish":2,"openings":[]}
+]</textarea>
+    <div class="billing-grid">
+      <label>Masonry / m³<input id="rate-masonry" type="number" min="0" step="any" value="6500"></label>
+      <label>Wall / running m<input id="rate-running" type="number" min="0" step="any" value="0"></label>
+      <label>Plaster / m²<input id="rate-plaster" type="number" min="0" step="any" value="40"></label>
+      <label>Painting / m²<input id="rate-paint" type="number" min="0" step="any" value="25"></label>
+      <label>Wastage %<input id="rate-wastage" type="number" min="0" step="any" value="5"></label>
+      <label>Labour %<input id="rate-labour" type="number" min="0" step="any" value="10"></label>
+      <label>Overhead %<input id="rate-overhead" type="number" min="0" step="any" value="5"></label>
+      <label>Tax %<input id="rate-tax" type="number" min="0" step="any" value="0"></label>
+    </div>
+    <button class="btn" id="billing-calculate" type="button">Calculate estimate</button>
+    <div id="billing-status" role="status" aria-live="polite"></div>
+    <pre id="billing-result" hidden></pre>
+  </aside>
+
+  <div id="status" role="status" aria-live="polite">Preparing workspace…</div>
+
+
+
 </div>
 
-<canvas id="scene"></canvas>
+
+
+<aside id="materials-panel" hidden aria-label="Wall material library">
+
+
+
+  <div class="materials-head">
+
+
+
+    <strong>Wall Material Library</strong>
+
+
+
+    <button class="btn" id="materials-close" type="button">Close</button>
+
+
+
+  </div>
+
+
+
+  <div class="materials-search">
+
+
+
+    <input id="material-search" type="search" placeholder="Search marble, brick, plaster…" value="marble">
+
+
+
+    <button class="btn primary" id="material-search-button" type="button">Search</button>
+
+
+
+  </div>
+
+
+
+  <div id="material-results"></div>
+
+
+
+  <div class="material-actions">
+
+
+
+    <label for="material-resolution">Resolution</label>
+
+
+
+    <select id="material-resolution">
+
+
+
+      <option value="1k">1K · Preview</option>
+
+
+
+      <option value="2k" selected>2K · Recommended</option>
+
+
+
+      <option value="4k">4K · High quality</option>
+
+
+
+      <option value="8k">8K · Ultra</option>
+
+
+
+    </select>
+
+
+
+    <button class="btn primary" id="material-apply" type="button" disabled>Apply to walls</button>
+
+
+
+  </div>
+
+
+
+  <div id="material-status" role="status">Search Poly Haven materials to get started.</div>
+
+
+
+  <div style="font-size:10px;color:#a4a8b5;margin-top:10px">Material assets: CC0 · Catalogue powered by Poly Haven.</div>
+
+
+
+</aside>
+
+
+
+<aside id="furniture-panel" hidden aria-label="Furniture library">
+
+
+
+  <div class="furniture-head"><strong>Furniture Library</strong><button class="btn" id="furniture-close" type="button">Close</button></div>
+
+
+
+  <div id="furniture-rooms" class="furniture-rooms"></div>
+
+
+
+  <div class="furniture-search"><input id="furniture-search" type="search" placeholder="Search furniture…"><button class="btn primary" id="furniture-search-button" type="button">Search</button></div>
+
+
+
+  <div id="furniture-results"></div>
+
+
+
+  <div class="furniture-footer"><span style="font-size:11px;color:#aeb5c5">Selected model</span><button class="btn primary" id="furniture-add" type="button" disabled>＋ Add to scene</button></div>
+
+
+
+  <div id="furniture-status" role="status">Choose a room to browse 3D furniture models.</div>
+
+
+
+  <div style="font-size:10px;color:#a4a8b5;margin-top:10px">3D models: CC0 · Powered by Poly Haven.</div>
+
+
+
+</aside>
+
+
+
+<canvas id="scene" aria-label="Interactive 3D floor plan. Drag to orbit and scroll to zoom."></canvas>
+
+
 
 <script type="module">
+
+
+
 import * as THREE from "three";
+
+
+
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
+
+
+import { initMaterialBrowser } from "./materials.js";
+
+
+
+import { initFurnitureBrowser } from "./furniture.js";
+
+import { initOpeningsReplacer } from "./openings.js";
+
+
+
 // -----------------------------------------------------------------------------
+
+
+
 // Constants — physical dimensions are in arbitrary world units. We rescale each
+
+
+
 // plan so its longest axis spans TARGET_PLAN_SIZE units; everything else is
+
+
+
 // measured proportionally so a small plan and a large plan look the same size.
+
+
+
 // -----------------------------------------------------------------------------
+
+
+
 const TARGET_PLAN_SIZE = 8.0;
+
+
+
 const WALL_HEIGHT      = 0.55;
-const DOOR_HEIGHT      = 0.40;       // ~75% of WALL_HEIGHT
+
+
+
+const DOOR_HEIGHT      = 0.40;       // \~75% of WALL_HEIGHT
+
+
+
 const WINDOW_SILL      = 0.16;       // bottom of glass
+
+
+
 const WINDOW_TOP       = 0.45;       // top of glass
+
+
+
 const RISE_DURATION_MS = 900;
+
+
+
 const STAGGER_MS       = 28;
+
+
+
 const EDGE_ANGLE_DEG   = 14;          // smaller -> more crease lines
 
+
+
 // Palette
+
+
+
 const COLOR_BG     = 0xf4f1ec;
+
+
+
 const COLOR_FLOOR  = 0xece8e1;
+
+
+
 const COLOR_WHITE  = 0xffffff;
+
+
+
 const COLOR_GLASS  = 0xdbe6ec;
+
+
+
 const COLOR_INK    = 0x1a1a1a;
 
+
+
 // -----------------------------------------------------------------------------
+
+
+
 // Three.js bootstrap
+
+
+
 // -----------------------------------------------------------------------------
+
+
+
 const canvas = document.getElementById("scene");
 
+
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+
+
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+
+
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+
+
 renderer.shadowMap.enabled = true;
+
+
+
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+
+
 const scene = new THREE.Scene();
+
+
+
 scene.background = new THREE.Color(COLOR_BG);
+
+
 
 const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200);
 
+
+
 const controls = new OrbitControls(camera, canvas);
+
+
+
 controls.enableDamping = true;
+
+
+
 controls.dampingFactor = 0.08;
+
+
+
 controls.minDistance   = 3.5;
+
+
+
 controls.maxDistance   = 40;
+
+
+
 controls.maxPolarAngle = Math.PI / 2 - 0.04;  // never go below ground
 
+
+
 // Lights: hemisphere for soft fill, one warm-ish directional sun for shape,
+
+
+
 // minimal ambient to lift shadows. Pure-white walls need careful balance —
+
+
+
 // too much directional makes them look gray on the lit side; too little
+
+
+
 // kills the sense of depth.
+
+
+
 const hemi = new THREE.HemisphereLight(0xffffff, 0xece8e1, 0.55);
+
+
+
 scene.add(hemi);
+
+
+
 const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+
+
+
 sun.position.set(6, 12, 5);
+
+
+
 sun.castShadow = true;
+
+
+
 sun.shadow.mapSize.set(2048, 2048);
+
+
+
 sun.shadow.camera.left = -8; sun.shadow.camera.right = 8;
+
+
+
 sun.shadow.camera.top  = 8;  sun.shadow.camera.bottom = -8;
+
+
+
 sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 40;
+
+
+
 sun.shadow.bias = -0.0005;
+
+
+
 scene.add(sun);
+
+
+
 scene.add(new THREE.AmbientLight(0xffffff, 0.18));
 
+
+
 // Floor — a slightly darker shade than the background so the horizon reads.
+
+
+
 const floorGeom = new THREE.PlaneGeometry(60, 60);
+
+
+
 floorGeom.rotateX(-Math.PI / 2);
+
+
+
 const floor = new THREE.Mesh(
+
+
+
   floorGeom,
+
+
+
   new THREE.MeshStandardMaterial({ color: COLOR_FLOOR, roughness: 0.95, metalness: 0 })
+
+
+
 );
+
+
+
 floor.receiveShadow = true;
+
+
+
 scene.add(floor);
 
+
+
 // Materials are shared across all meshes so we don't pay the cost of
+
+
+
 // allocating per polygon, and so a future palette change is one line.
+
+
+
 const wallMat = new THREE.MeshStandardMaterial({ color: COLOR_WHITE, roughness: 0.85, metalness: 0 });
+
+
+
 const doorMat = new THREE.MeshStandardMaterial({ color: COLOR_WHITE, roughness: 0.85, metalness: 0 });
+
+
+
 const windowMat = new THREE.MeshPhysicalMaterial({
+
+
+
   color: COLOR_GLASS,
+
+
+
   transparent: true,
+
+
+
   opacity: 0.42,
+
+
+
   roughness: 0.08,
+
+
+
   metalness: 0,
+
+
+
   transmission: 0.35,
+
+
+
   ior: 1.45,
+
+
+
 });
+
+
+
 const edgeMat = new THREE.LineBasicMaterial({ color: COLOR_INK, transparent: true, opacity: 0.78 });
 
+
+
 // Group containing the active plan; cleared on each load so we can reuse
+
+
+
 // the lights, camera, and floor across renders.
+
+
+
 const planGroup = new THREE.Group();
+
+
+
 scene.add(planGroup);
 
+
+
+initFurnitureBrowser({
+
+
+
+  sceneGroup: planGroup,
+
+
+
+  camera,
+
+
+
+  renderer,
+
+
+
+  controls,
+
+
+
+  floor
+
+
+
+});
+
+
+
+// Replace detected door/window placeholders with downloaded Poly Haven GLTF models.
+
+const openingsReplacer = initOpeningsReplacer({
+
+  sceneGroup: planGroup,
+
+  windowSill: WINDOW_SILL,
+
+  windowTop: WINDOW_TOP,
+
+  doorHeight: DOOR_HEIGHT,
+
+});
+
+
+
+initMaterialBrowser({
+
+
+
+  onApply: (material) => {
+
+
+
+    for (const child of planGroup.children) {
+
+
+
+      if (child.userData?.kind === "wall" && child.isMesh) {
+
+
+
+        child.material = material;
+
+
+
+      }
+
+
+
+    }
+
+
+
+  },
+
+
+
+});
+
+
+
 // Last-loaded plan's camera framing. Used by the "Show original" toggle
+
+
+
 // to compute matching perspective and overhead camera positions.
+
+
+
 let currentFraming = null;
+
+
+
 let showingOriginal = false;
 
+
+
 // -----------------------------------------------------------------------------
+
+
+
 // Resize
+
+
+
 // -----------------------------------------------------------------------------
+
+
+
 function onResize() {
+
+
+
   const w = window.innerWidth, h = window.innerHeight;
+
+
+
   // updateStyle=true (the default) is critical: with `false`, Three.js sets
+
+
+
   // only canvas.width/height (the drawing buffer, in device pixels) and
+
+
+
   // leaves CSS layout to size the canvas by its HTML width/height attrs.
+
+
+
   // For a <canvas> (replaced element), the intrinsic w/h from those attrs
+
+
+
   // wins over CSS `inset: 0`, so the canvas's CSS box ended up at
+
+
+
   // (viewport * devicePixelRatio) — bigger than the viewport, with the
+
+
+
   // optical-axis center offscreen to the bottom-right.
+
+
+
   renderer.setSize(w, h, true);
+
+
+
   camera.aspect = w / h;
+
+
+
   camera.updateProjectionMatrix();
+
+
+
 }
+
+
+
 window.addEventListener("resize", onResize);
+
+
+
 onResize();
 
+
+
 // Auto-frame: position the camera so a sphere of `radius` around `center` fits
+
+
+
 // in view with a small margin. Uses the more restrictive of the horizontal /
+
+
+
 // vertical FOV so the model fits in both axes. Direction is fixed (south-east
-// looking down ~30°) so lighting and edge highlights stay consistent.
+
+
+
+// looking down \~30°) so lighting and edge highlights stay consistent.
+
+
+
 function frameModel(center, radius) {
+
+
+
   const fovY = THREE.MathUtils.degToRad(camera.fov);
+
+
+
   const fovX = 2 * Math.atan(Math.tan(fovY / 2) * camera.aspect);
+
+
+
   const dist = radius / Math.sin(Math.min(fovY, fovX) / 2) * 1.15;
+
+
 
   const dir = new THREE.Vector3(0.55, 0.62, 0.85).normalize();
+
+
+
   camera.position.copy(center).addScaledVector(dir, dist);
+
+
+
   controls.target.copy(center);
+
+
+
   controls.update();
+
+
+
 }
+
+
 
 // Compute the near-overhead camera position that frames the same sphere.
+
+
+
 // Keep a small Z offset so the up-vector doesn't align with the view
+
+
+
 // direction (which is degenerate for OrbitControls).
+
+
+
 function overheadPosition(center, radius) {
+
+
+
   const fovY = THREE.MathUtils.degToRad(camera.fov);
+
+
+
   const fovX = 2 * Math.atan(Math.tan(fovY / 2) * camera.aspect);
+
+
+
   const dist = radius / Math.sin(Math.min(fovY, fovX) / 2) * 1.15;
+
+
+
   return new THREE.Vector3(center.x, center.y + dist, center.z + 0.001);
+
+
+
 }
+
+
 
 // Camera tween — driven from the per-frame tick(). Used by the "Show
+
+
+
 // original" toggle to glide between perspective and overhead views.
+
+
+
 const cameraTween = { active: false };
+
+
+
 function tweenCamera(toPos, toTarget, duration = 600) {
+
+
+
   cameraTween.fromPos = camera.position.clone();
+
+
+
   cameraTween.toPos = toPos.clone();
+
+
+
   cameraTween.fromTarget = controls.target.clone();
+
+
+
   cameraTween.toTarget = toTarget.clone();
+
+
+
   cameraTween.t0 = performance.now();
+
+
+
   cameraTween.duration = duration;
+
+
+
   cameraTween.active = true;
+
+
+
 }
 
+
+
 // -----------------------------------------------------------------------------
+
+
+
 // Polygon -> mesh
+
+
+
 //
+
+
+
 // Each polygon arrives as { outer: [[x, y], ...], holes: [[[x, y], ...], ...] }
+
+
+
 // where x, y are in canvas pixels (image space, Y-down). We center on the
+
+
+
 // plan's content rect, scale to world units, and build a THREE.Shape.
+
+
+
 // ExtrudeGeometry then sweeps it along the local Z axis; we rotate the
+
+
+
 // finished mesh by -90° around X so that local Z becomes world Y (up).
+
+
+
 // Scaling local Z animates wall height without rebuilding geometry.
+
+
+
 // -----------------------------------------------------------------------------
+
+
+
 function buildShape(outer, holes, scale, cx, cy) {
+
+
+
   const shape = new THREE.Shape();
+
+
+
   outer.forEach(([x, y], i) => {
+
+
+
     const sx = (x - cx) * scale;
+
+
+
     const sy = (y - cy) * scale;
+
+
+
     if (i === 0) shape.moveTo(sx, sy);
+
+
+
     else shape.lineTo(sx, sy);
+
+
+
   });
+
+
+
   shape.closePath();
+
+
+
   for (const hole of holes ?? []) {
+
+
+
     const path = new THREE.Path();
+
+
+
     hole.forEach(([x, y], i) => {
+
+
+
       const sx = (x - cx) * scale;
+
+
+
       const sy = (y - cy) * scale;
+
+
+
       if (i === 0) path.moveTo(sx, sy);
+
+
+
       else path.lineTo(sx, sy);
+
+
+
     });
+
+
+
     path.closePath();
+
+
+
     shape.holes.push(path);
+
+
+
   }
+
+
+
   return shape;
+
+
+
 }
+
+
 
 function buildExtrudedMesh(polygon, scale, cx, cy, depth, material, withEdges) {
+
+
+
   const shape = buildShape(polygon.outer, polygon.holes, scale, cx, cy);
+
+
+
   const geom = new THREE.ExtrudeGeometry(shape, {
+
+
+
     depth,
+
+
+
     bevelEnabled: false,
+
+
+
     curveSegments: 4,
+
+
+
   });
+
+
+
   const mesh = new THREE.Mesh(geom, material);
+
+
+
   mesh.castShadow = true;
+
+
+
   mesh.receiveShadow = true;
+
+
+
   // Local Z (extrusion axis) becomes world Y (up).
+
+
+
   mesh.rotation.x = -Math.PI / 2;
 
+
+
   if (withEdges) {
+
+
+
     const edges = new THREE.EdgesGeometry(geom, EDGE_ANGLE_DEG);
+
+
+
     mesh.add(new THREE.LineSegments(edges, edgeMat));
+
+
+
   }
+
+
+
   return mesh;
+
+
+
 }
+
+
 
 function polygonCentroidImage(poly) {
+
+
+
   let sx = 0, sy = 0;
+
+
+
   for (const [x, y] of poly.outer) { sx += x; sy += y; }
+
+
+
   const n = poly.outer.length;
+
+
+
   return [sx / n, sy / n];
+
+
+
 }
+
+
 
 // Bounding box (in image-pixel coordinates) over every polygon ring of every
+
+
+
 // class. We center the world on this bbox rather than on the SVG content rect:
+
+
+
 // the SVG can have whitespace inside its viewBox, so the building's geometric
+
+
+
 // center is not always the canvas center, which would otherwise leave the
+
+
+
 // orbit pivot off to one side of the model.
+
+
+
 function polygonsBBox(polygons) {
+
+
+
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+
+
   for (const cls of ["wall", "door", "window"]) {
+
+
+
     for (const p of polygons[cls] ?? []) {
+
+
+
       for (const [x, y] of p.outer) {
+
+
+
         if (x < minX) minX = x;
+
+
+
         if (y < minY) minY = y;
+
+
+
         if (x > maxX) maxX = x;
+
+
+
         if (y > maxY) maxY = y;
+
+
+
       }
+
+
+
     }
+
+
+
   }
+
+
+
   return { minX, minY, maxX, maxY };
+
+
+
 }
+
+
 
 // Build a textured plane that shows the original SVG laying flat under the
+
+
+
 // rising 3D geometry. Sized & positioned so its pixels align 1:1 with the
+
+
+
 // polygon coordinates, so as walls rise from y=0 they appear to extrude
+
+
+
 // directly out of the inked outlines on the floor.
+
+
+
 function buildInputImagePlane(b64, contentRect, scale, cx, cy) {
+
+
+
   return new Promise((resolve, reject) => {
+
+
+
     const img = new Image();
+
+
+
     img.onload = () => {
+
+
+
       const tex = new THREE.Texture(img);
+
+
+
       tex.colorSpace = THREE.SRGBColorSpace;
+
+
+
       tex.minFilter = THREE.LinearFilter;
+
+
+
       tex.magFilter = THREE.LinearFilter;
+
+
+
       // We position the plane so canvas-top maps to world +Z (north), and the
+
+
+
       // texture's natural orientation (image pixel (0,0) at top-left) needs to
+
+
+
       // line up with that. flipY=false keeps the texture un-flipped so pixel
+
+
+
       // (0,0) lands at UV (0,0) at the plane's south-west corner — which is
+
+
+
       // exactly where canvas-top-left ends up after our rotation/translation.
+
+
+
       tex.flipY = false;
+
+
+
       tex.needsUpdate = true;
 
+
+
       const [left, top, innerW, innerH] = contentRect;
+
+
+
       const planeGeom = new THREE.PlaneGeometry(innerW * scale, innerH * scale);
+
+
+
       planeGeom.rotateX(-Math.PI / 2);
+
+
+
       const mat = new THREE.MeshBasicMaterial({
+
+
+
         map: tex,
+
+
+
         transparent: true,
+
+
+
         // Keep the floor plane visible through the SVG's whitespace; the SVG
+
+
+
         // itself is rendered with a transparent background server-side.
+
+
+
         depthWrite: false,
+
+
+
       });
+
+
+
       const plane = new THREE.Mesh(planeGeom, mat);
+
+
+
       // Position so the content rect aligns pixel-for-pixel with the polygons.
+
+
+
       plane.position.set(
+
+
+
         (left + innerW / 2 - cx) * scale,
+
+
+
         0.002,                                  // tiny lift to avoid z-fighting with the floor
+
+
+
         -(top + innerH / 2 - cy) * scale,
+
+
+
       );
+
+
+
       plane.userData.disposable = { texture: tex };
+
+
+
       // Marker so the "Show original" toggle can leave this plane visible
+
+
+
       // while hiding the extruded geometry on top of it.
+
+
+
       plane.userData.isInputImage = true;
+
+
+
       resolve(plane);
+
+
+
     };
+
+
+
     img.onerror = reject;
+
+
+
     img.src = "data:image/png;base64," + b64;
+
+
+
   });
+
+
+
 }
 
+
+
 // -----------------------------------------------------------------------------
+
+
+
 // Animation — each mesh has a delay and a duration. Every frame we recompute
+
+
+
 // scale.z (which after rotation is world-Y), so the wall grows from a flat
+
+
+
 // footprint up to its full height.
+
+
+
 // -----------------------------------------------------------------------------
+
+
+
 const animations = [];
 
+
+
 function tick(now) {
+
+
+
   for (const a of animations) {
+
+
+
     const t = Math.min(1, Math.max(0, (now - a.start - a.delay) / a.duration));
+
+
+
     const eased = 1 - Math.pow(1 - t, 3);     // cubic-out
+
+
+
     // Math.max keeps a tiny epsilon so the geometry is never degenerate;
+
+
+
     // a true zero scale crashes shadow calculations on some drivers.
+
+
+
     a.mesh.scale.z = Math.max(0.001, eased);
+
+
+
   }
+
+
+
   if (cameraTween.active) {
+
+
+
     const t = Math.min(1, (now - cameraTween.t0) / cameraTween.duration);
+
+
+
     const eased = 1 - Math.pow(1 - t, 3);
+
+
+
     camera.position.lerpVectors(cameraTween.fromPos, cameraTween.toPos, eased);
+
+
+
     controls.target.lerpVectors(cameraTween.fromTarget, cameraTween.toTarget, eased);
+
+
+
     if (t >= 1) cameraTween.active = false;
+
+
+
   }
+
+
+
   controls.update();
+
+
+
   renderer.render(scene, camera);
+
+
+
   requestAnimationFrame(tick);
+
+
+
 }
+
+
+
 requestAnimationFrame(tick);
 
+
+
 // -----------------------------------------------------------------------------
+
+
+
 // Plan lifecycle
+
+
+
 // -----------------------------------------------------------------------------
+
+
+
 function disposeMeshDeep(obj) {
+
+
+
   if (obj.geometry) obj.geometry.dispose();
+
+
+
   if (obj.userData?.disposable?.texture) obj.userData.disposable.texture.dispose();
+
+
+
   for (const c of obj.children) disposeMeshDeep(c);
+
+
+
 }
+
+
+
 function clearPlan() {
+
+
+
   while (planGroup.children.length > 0) {
+
+
+
     const c = planGroup.children[0];
+
+
+
     planGroup.remove(c);
+
+
+
     disposeMeshDeep(c);
+
+
+
   }
+
+
+
   animations.length = 0;
+
+
+
 }
+
+
 
 async function loadPlan(data) {
+
+
+
   clearPlan();
 
+
+
   // Center on the polygon bbox, not the SVG content rect — the SVG often has
+
+
+
   // whitespace inside its viewBox, so the building's geometric center can
+
+
+
   // sit a meaningful distance off the canvas center. Anchoring on the bbox
+
+
+
   // puts the orbit pivot exactly on the model.
+
+
+
   const bbox = polygonsBBox(data.polygons);
+
+
+
   const bw = bbox.maxX - bbox.minX;
+
+
+
   const bh = bbox.maxY - bbox.minY;
+
+
+
   if (!isFinite(bw) || bw <= 0 || bh <= 0) {
+
+
+
     status.textContent = "No polygons in this plan.";
+
+
+
     return;
+
+
+
   }
+
+
+
   const cx = (bbox.minX + bbox.maxX) / 2;
+
+
+
   const cy = (bbox.minY + bbox.maxY) / 2;
+
+
+
   const scale = TARGET_PLAN_SIZE / Math.max(bw, bh);
 
+
+
   // Frame the camera on the model's actual world bbox. After centering, the
+
+
+
   // model is at world (0, WALL_HEIGHT/2, 0), with horizontal extent bw*scale x
+
+
+
   // bh*scale. Bounding sphere radius covers the diagonal plus a bit of height.
+
+
+
   const halfW = bw * scale / 2;
+
+
+
   const halfD = bh * scale / 2;
+
+
+
   const center = new THREE.Vector3(0, WALL_HEIGHT / 2, 0);
+
+
+
   const radius = Math.hypot(halfW, halfD, WALL_HEIGHT);
+
+
+
   currentFraming = { center, radius };
+
+
+
   // Reset to 3D view on each new sample — the toggle only persists within
+
+
+
   // a single plan, not across loads, so visitors always start with the
+
+
+
   // 3D reveal animation.
+
+
+
   if (showingOriginal) setShowOriginal(false, /*animate*/ false);
+
+
+
   frameModel(center, radius);
 
+
+
   // Drop the input image in first so it appears under the geometry as the
+
+
+
   // walls start rising. Awaiting here also lets the texture decode finish
+
+
+
   // before the first paint, preventing a one-frame flash of blank floor.
+
+
+
   if (data.input_image_b64) {
+
+
+
     try {
+
+
+
       const plane = await buildInputImagePlane(
+
+
+
         data.input_image_b64, data.content_rect, scale, cx, cy,
+
+
+
       );
+
+
+
       planGroup.add(plane);
+
+
+
     } catch (e) {
+
+
+
       console.warn("input image failed to load:", e);
+
+
+
     }
+
+
+
   }
 
+
+
   // One flat list so we can sort all elements by spatial centrality and
+
+
+
   // get a single coherent stagger across walls/doors/windows.
+
+
+
   const items = [];
+
+
+
   for (const p of data.polygons.wall ?? [])   items.push({ poly: p, kind: "wall" });
+
+
+
   for (const p of data.polygons.door ?? [])   items.push({ poly: p, kind: "door" });
+
+
+
   for (const p of data.polygons.window ?? []) items.push({ poly: p, kind: "window" });
+
+
+
   items.sort((a, b) => {
+
+
+
     const [ax, ay] = polygonCentroidImage(a.poly);
+
+
+
     const [bx, by] = polygonCentroidImage(b.poly);
+
+
+
     return Math.hypot(ax - cx, ay - cy) - Math.hypot(bx - cx, by - cy);
+
+
+
   });
+
+
 
   const start = performance.now();
 
+
+
   items.forEach((item, i) => {
+
+
+
     let mesh;
+
+
+
     if (item.kind === "wall") {
+
+
+
       mesh = buildExtrudedMesh(item.poly, scale, cx, cy, WALL_HEIGHT, wallMat, true);
+
+
+
       mesh.position.y = 0;
+
+
+
     } else if (item.kind === "door") {
+
+
+
       mesh = buildExtrudedMesh(item.poly, scale, cx, cy, DOOR_HEIGHT, doorMat, true);
+
+
+
       mesh.position.y = 0;
+
+
+
     } else {
+
+
+
       // Windows are extruded between sill and lintel, so they read as
+
+
+
       // glass slabs floating in the wall plane.
+
+
+
       const depth = WINDOW_TOP - WINDOW_SILL;
+
+
+
       mesh = buildExtrudedMesh(item.poly, scale, cx, cy, depth, windowMat, false);
+
+
+
       mesh.position.y = WINDOW_SILL;
+
+
+
     }
-    mesh.scale.z = 0.001;  // start collapsed
+
+
+
+    mesh.userData.kind = item.kind;
+
+
+
+      mesh.scale.z = 0.001;  // start collapsed
+
+
+
     planGroup.add(mesh);
+
+
+
     animations.push({
+
+
+
       mesh,
+
+
+
       start,
+
+
+
       delay:    i * STAGGER_MS,
+
+
+
       duration: RISE_DURATION_MS,
+
+
+
     });
+
+
+
+    // Keep the placeholder as a fallback; openings.js hides it only after
+
+    // the corresponding GLTF model has loaded successfully.
+
+    if (item.kind === "door" || item.kind === "window") {
+
+      openingsReplacer.replacePlaceholder({
+
+        placeholder: mesh,
+
+        polygon: item.poly,
+
+        scale,
+
+        cx,
+
+        cy,
+
+        kind: item.kind,
+
+      });
+
+    }
+
+
+
   });
+
+
+
 }
 
+
+
 // -----------------------------------------------------------------------------
+
+
+
 // API + UI wiring
+
+
+
 // -----------------------------------------------------------------------------
+
+
+
 const status = document.getElementById("status");
+
+
+
 let inFlight = false;
 
+
+
 function summarize(data) {
+
+
+
   const w = data.polygons.wall.length;
+
+
+
   const d = data.polygons.door.length;
+
+
+
   const win = data.polygons.window.length;
+
+
+
   return `${w} walls · ${d} doors · ${win} windows`;
+
+
+
 }
+
+
 
 async function fetchAndLoad(url, init) {
+
+
+
   if (inFlight) return;
+
+
+
   inFlight = true;
-  status.textContent = "Extracting…";
+
+
+
+  status.textContent = "Building your 3D model… extracting geometry.";
+
+
+
   try {
+
+
+
     const res = await fetch(url, init);
+
+
+
     if (!res.ok) {
+
+
+
       const text = await res.text();
+
+
+
       status.textContent = `Error ${res.status}: ${text.slice(0, 120)}`;
+
+
+
       return;
+
+
+
     }
+
+
+
     const data = await res.json();
+
+
+
     status.textContent = summarize(data);
+
+
+
     await loadPlan(data);
+
+
+
   } catch (e) {
-    status.textContent = "Failed: " + e.message;
+
+
+
+    status.textContent = "Build failed: " + e.message;
+
+
+
   } finally {
+
+
+
     inFlight = false;
+
+
+
   }
+
+
+
 }
+
+
 
 // Sample buttons always load pre-rendered JSON from `viewer/demos/`. The
+
+
+
 // same files are served by the local FastAPI server (mounted at /demos)
+
+
+
 // and by Cloudflare Pages (as static assets), so the viewer doesn't need
+
+
+
 // to know which host it's on.
+
+
+
 document.querySelectorAll("button[data-sample]").forEach(b => {
+
+
+
   b.addEventListener("click", () => fetchAndLoad(`./demos/${b.dataset.sample}.json`));
+
+
+
 });
 
+
+
 // "Show original" toggle — hides the extruded geometry and glides the
+
+
+
 // camera overhead so the input PNG (the floor texture under the 3D) reads
+
+
+
 // as a flat 2D plan. Toggling back restores the rise-from-flat view.
+
+
+
 const toggleViewBtn = document.getElementById("toggle-view");
+
+
+
 function setShowOriginal(on, animate = true) {
+
+
+
   showingOriginal = on;
+
+
+
   for (const child of planGroup.children) {
+
+
+
     if (!child.userData?.isInputImage) child.visible = !on;
+
+
+
   }
+
+
+
   // Disable orbit-rotate when overhead so a casual mobile tap doesn't
+
+
+
   // tilt the user out of the 2D view; pan and zoom stay on.
+
+
+
   controls.enableRotate = !on;
+
+
+
   toggleViewBtn.textContent = on ? "Show 3D" : "Show original";
+
+
+
   if (!currentFraming) return;
+
+
+
   const { center, radius } = currentFraming;
+
+
+
   if (animate) {
+
+
+
     tweenCamera(on ? overheadPosition(center, radius) : (() => {
+
+
+
       const fovY = THREE.MathUtils.degToRad(camera.fov);
+
+
+
       const fovX = 2 * Math.atan(Math.tan(fovY / 2) * camera.aspect);
+
+
+
       const dist = radius / Math.sin(Math.min(fovY, fovX) / 2) * 1.15;
+
+
+
       const dir = new THREE.Vector3(0.55, 0.62, 0.85).normalize();
+
+
+
       return center.clone().addScaledVector(dir, dist);
+
+
+
     })(), center);
+
+
+
   }
+
+
+
 }
+
+
+
 toggleViewBtn.addEventListener("click", () => setShowOriginal(!showingOriginal));
 
+
+
+// Replay the rise-from-floor animation without re-running extraction.
+
+
+
+document.getElementById("replay-animation").addEventListener("click", () => {
+
+
+
+  if (!animations.length) {
+
+
+
+    status.textContent = "Load a floor plan first to replay the build.";
+
+
+
+    return;
+
+
+
+  }
+
+
+
+  const now = performance.now();
+
+
+
+  for (const a of animations) {
+
+
+
+    a.start = now;
+
+
+
+    a.mesh.scale.z = 0.001;
+
+
+
+    a.mesh.visible = true;
+
+
+
+  }
+
+
+
+  if (showingOriginal) setShowOriginal(false);
+
+
+
+  status.textContent = "Replaying 3D construction…";
+
+
+
+});
+
+
+
+// Restore the default perspective framing for the current plan.
+
+
+
+document.getElementById("reset-camera").addEventListener("click", () => {
+
+
+
+  if (!currentFraming) return;
+
+
+
+  setShowOriginal(false, false);
+
+
+
+  frameModel(currentFraming.center, currentFraming.radius);
+
+
+
+  status.textContent = "View reset. Drag to orbit · scroll to zoom.";
+
+
+
+});
+
+
+
 // Live upload only works when the FastAPI server is reachable. Probe
+
+
+
 // /healthz once at startup; if it answers, reveal the upload UI and wire
+
+
+
 // drag-and-drop. On the static deploy this 404s and the upload UI stays
+
+
+
 // hidden — visitors still get the pre-rendered samples.
+
+
+
 async function enableLiveMode() {
+
+
+
   // Cloudflare Pages serves index.html as a fallback for unknown paths,
+
+
+
   // so a plain `res.ok` check would be true even with no backend. Require
+
+
+
   // a real JSON body matching the FastAPI healthz contract.
+
+
+
   try {
+
+
+
     const res = await fetch("/healthz", { cache: "no-store" });
+
+
+
     if (!res.ok) return;
+
+
+
     if (!res.headers.get("content-type")?.includes("application/json")) return;
+
+
+
     const body = await res.json();
+
+
+
     if (!body || body.ok !== true) return;
+
+
+
   } catch { return; }
 
+
+
   document.getElementById("upload-label").hidden = false;
+
+
+
   document.getElementById("upload-btn").hidden = false;
 
+
+
+  document.getElementById("tectly-upload-btn").hidden = false;
+
+
+
   const fileInput = document.getElementById("file-input");
+
+
+
   document.getElementById("upload-btn").addEventListener("click", () => fileInput.click());
+
+
+
   fileInput.addEventListener("change", () => {
+
+
+
     if (!fileInput.files.length) return;
+
+
+
     const fd = new FormData();
+
+
+
     fd.append("svg", fileInput.files[0]);
+
+
+
     fetchAndLoad("/extract", { method: "POST", body: fd });
+
+
+
     fileInput.value = "";
+
+
+
   });
 
-  let dragDepth = 0;
-  window.addEventListener("dragenter", e => { e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); });
-  window.addEventListener("dragleave", e => { e.preventDefault(); dragDepth--; if (dragDepth <= 0) document.body.classList.remove("dragging"); });
-  window.addEventListener("dragover",  e => { e.preventDefault(); });
-  window.addEventListener("drop", e => {
-    e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging");
-    const file = e.dataTransfer?.files?.[0];
-    if (!file) return;
-    const fd = new FormData();
-    fd.append("svg", file);
-    fetchAndLoad("/extract", { method: "POST", body: fd });
+
+
+  const tectlyFileInput = document.getElementById("tectly-file-input");
+
+
+
+const tectlyUploadBtn = document.getElementById("tectly-upload-btn");
+
+
+
+tectlyUploadBtn.addEventListener("click", () => {
+
+
+
+  tectlyFileInput.click();
+
+
+
+});
+
+
+
+tectlyFileInput.addEventListener("change", () => {
+
+
+
+  if (!tectlyFileInput.files.length) return;
+
+
+
+  const fd = new FormData();
+
+
+
+  fd.append("file", tectlyFileInput.files[0]);
+
+
+
+  fetchAndLoad("/tectly/extract", {
+
+
+
+    method: "POST",
+
+
+
+    body: fd
+
+
+
   });
+
+
+
+  tectlyFileInput.value = "";
+
+
+
+});
+
+
+
+  let dragDepth = 0;
+
+
+
+  window.addEventListener("dragenter", e => { e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); });
+
+
+
+  window.addEventListener("dragleave", e => { e.preventDefault(); dragDepth--; if (dragDepth <= 0) document.body.classList.remove("dragging"); });
+
+
+
+  window.addEventListener("dragover",  e => { e.preventDefault(); });
+
+
+
+  window.addEventListener("drop", e => {
+
+
+
+    e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging");
+
+
+
+    const file = e.dataTransfer?.files?.[0];
+
+
+
+    if (!file) return;
+
+
+
+    const fd = new FormData();
+
+
+
+    fd.append("svg", file);
+
+
+
+    fetchAndLoad("/extract", { method: "POST", body: fd });
+
+
+
+  });
+
+
+
 }
+
+
+
+// Construction billing estimator UI. This calls the existing FastAPI billing router.
+const billingPanel = document.getElementById("billing-panel");
+document.getElementById("billing-open")?.addEventListener("click", () => { if (billingPanel) billingPanel.hidden = false; });
+document.getElementById("billing-close")?.addEventListener("click", () => { if (billingPanel) billingPanel.hidden = true; });
+document.getElementById("billing-calculate")?.addEventListener("click", async () => {
+  const status = document.getElementById("billing-status");
+  const result = document.getElementById("billing-result");
+  const number = id => Number(document.getElementById(id).value);
+  try {
+    const walls = JSON.parse(document.getElementById("billing-walls").value);
+    if (!Array.isArray(walls) || walls.length === 0) throw new Error("Wall measurements must be a non-empty JSON array.");
+    const payload = {
+      project_name: document.getElementById("billing-project").value.trim() || "ArchScale Project",
+      walls,
+      rates: {
+        masonry_per_m3: number("rate-masonry"),
+        wall_per_running_m: number("rate-running"),
+        plaster_per_m2: number("rate-plaster"),
+        painting_per_m2: number("rate-paint"),
+        wastage_percent: number("rate-wastage"),
+        labour_percent: number("rate-labour"),
+        overhead_percent: number("rate-overhead"),
+        tax_percent: number("rate-tax")
+      }
+    };
+    if (Object.values(payload.rates).some(v => !Number.isFinite(v) || v < 0)) throw new Error("All rates must be valid non-negative numbers.");
+    status.textContent = "Calculating estimate…";
+    result.hidden = true;
+    const response = await fetch("/billing/estimate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.detail || `Billing API returned HTTP ${response.status}`);
+    result.textContent = JSON.stringify(data, null, 2);
+    result.hidden = false;
+    status.textContent = `Estimate generated. Grand total: ₹${Number(data.cost_breakdown?.grand_total || 0).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+  } catch (error) {
+    status.textContent = `Could not calculate estimate: ${error.message}`;
+  }
+});
+
 enableLiveMode();
 
 fetchAndLoad("./demos/1191.json");
+
+
+
 </script>
+
+
+
 </body>
+
+
+
 </html>
