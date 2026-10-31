@@ -1,0 +1,37 @@
+# v2: ResNet34-UNet on CubiCasa5K, 4-class segmentation.
+#
+# Sole change vs v1: input fidelity. The dataset now (a) renders the SVG at
+# 512x512 instead of 384x384 — 1.78x more pixels per axis, 3.16x area — and
+# (b) preserves the SVG's native aspect ratio with letterbox padding, so
+# non-square plans aren't stretched. Both changes target wall IoU, which v1
+# inspection showed is bottlenecked by walls becoming sub-pixel after the
+# aggressive downscale.
+#
+# Everything else (model, optimizer, schedule, loss) is identical to v1, so
+# the v1↔v2 metrics comparison reads the effect of input fidelity in
+# isolation.
+
+data:
+  data_dir: data/cubicasa5k
+  image_size: [512, 512]
+  num_workers: 4
+  normalize: true
+  letterbox: true                    # NEW: aspect-preserving render + center-pad
+
+model:
+  encoder_name: resnet34
+  encoder_weights: imagenet
+
+optim:
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  batch_size: 8
+
+train:
+  epochs: 30
+  log_every: 20
+  device: auto
+  checkpoint_every: 0
+
+output:
+  run_dir: runs/v2

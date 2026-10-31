@@ -42,6 +42,9 @@ serve = [
     "uvicorn>=0.27",
     "python-multipart>=0.0.9",
     "opencv-python-headless>=4.10",
+    "tectly==1.0.0.post1",
+    "python-dotenv>=1.0",
+    "pymupdf>=1.24",
 ]
 
 [tool.setuptools.packages.find]

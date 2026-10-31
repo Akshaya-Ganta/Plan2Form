@@ -22,12 +22,17 @@ data/*
 !data/README.md
 checkpoints/
 runs/
-weights/
+# Ignore generated weights, but include the deployment checkpoint
+weights/*
+!weights/best.safetensors
+!weights/config.yaml
 wandb/
 *.ckpt
 *.pt
 *.pth
 *.onnx
+# Generated Python build artifacts
+build/
 
 # Notebook outputs (keep notebooks small in git)
 .ipynb_checkpoints/
